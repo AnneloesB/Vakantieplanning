@@ -18,11 +18,14 @@
   .gantt { width: 100%; overflow-x: auto; }
   table { border-collapse: collapse; width: 100%; table-layout: fixed; }
   th, td { font-size: 11px; }
-  .name-col { width: 110px; }
+  .name-col { width: 110px; position: sticky; left: 0; z-index: 2; }
+  thead .name-col { z-index: 3; background: #fff; }
   .row-even { background: #f5f5f5; }
   .row-odd  { background: #fff; }
+  .row-even .name-col { background: #f5f5f5; }
+  .row-odd .name-col  { background: #fff; }
   .row-even.row-hover, .row-odd.row-hover { background: #dceeff; }
-  .row-hover .name-col { font-weight: 700; color: #000; }
+  .row-hover .name-col { font-weight: 700; color: #000; background: #dceeff; }
 </style>
 </head>
 <body>
