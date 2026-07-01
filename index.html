@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vakantie Gantt 2026</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; padding: 24px; background: #fff; color: #222; }
+  h1 { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #333; }
+  .gantt { width: 100%; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 700px; table-layout: fixed; }
+  th, td { font-size: 11px; }
+  .name-col { width: 110px; }
+  .row-even { background: #f5f5f5; }
+  .row-odd  { background: #fff; }
+</style>
+</head>
+<body>
+<h1>Vakantieoverzicht team 2026</h1>
+<div class="gantt" id="gantt"></div>
+<script>
+const people = [
+  { name: 'Greet',      periods: [{ start: '2026-05-29', end: '2026-06-06' }] },
+  { name: 'Denise',     periods: [{ start: '2026-06-15', end: '2026-06-19' }, { start: '2026-07-13', end: '2026-07-27' }] },
+  { name: 'Marieke',    periods: [{ start: '2026-06-26', end: '2026-07-11' }] },
+  { name: 'Michelle',   periods: [{ start: '2026-07-20', end: '2026-08-23' }] },
+  { name: 'Annemarije', periods: [{ start: '2026-07-27', end: '2026-08-25' }] },
+  { name: 'Kirsten',    periods: [{ start: '2026-07-31', end: '2026-08-28' }] },
+  { name: 'Lonneke',    periods: [{ start: '2026-08-03', end: '2026-08-19' }] },
+  { name: 'Anneloes',   periods: [{ start: '2026-08-24', end: '2026-09-08' }] },
+  { name: 'Mirjam',     periods: [] },
+];
+
+const colors = ['#4A8FDD','#1D9E75','#D85A30','#7F77DD','#BA7517','#993556','#639922','#0F6E56','#888780'];
+
+function getISOWeek(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
+
+function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+function fmt(d) { return d.getDate() + ' ' + d.toLocaleString('nl-NL', { month: 'short' }); }
+
+const chartStart = new Date('2026-05-25');
+const chartEnd   = new Date('2026-09-14');
+const totalDays  = daysBetween(chartStart, chartEnd);
+
+const weeks = [];
+let cur = new Date(chartStart);
+while (cur < chartEnd) { weeks.push(new Date(cur)); cur.setDate(cur.getDate() + 7); }
+
+const monthGroups = [];
+weeks.forEach((w) => {
+  const mKey = w.getFullYear() + '-' + w.getMonth();
+  if (!monthGroups.length || monthGroups[monthGroups.length-1].key !== mKey)
+    monthGroups.push({ key: mKey, label: w.toLocaleString('nl-NL', { month: 'long' }), count: 0 });
+  monthGroups[monthGroups.length-1].count++;
+});
+
+const gantt = document.getElementById('gantt');
+const table = document.createElement('table');
+const thead = document.createElement('thead');
+
+// Month row
+const monthRow = document.createElement('tr');
+const mEmpty = document.createElement('th'); mEmpty.className = 'name-col'; monthRow.appendChild(mEmpty);
+monthGroups.forEach((mg, mi) => {
+  const th = document.createElement('th');
+  th.colSpan = mg.count;
+  th.style.cssText = `text-align:center;font-size:11px;font-weight:600;color:#444;padding:4px 0 2px;border-left:${mi===0?'none':'1px solid #bbb'};border-bottom:1px solid #ddd;`;
+  th.textContent = mg.label.charAt(0).toUpperCase() + mg.label.slice(1);
+  monthRow.appendChild(th);
+});
+thead.appendChild(monthRow);
+
+// Week number row
+const weekRow = document.createElement('tr');
+const wEmpty = document.createElement('th'); wEmpty.className = 'name-col'; weekRow.appendChild(wEmpty);
+weeks.forEach((w, i) => {
+  const th = document.createElement('th');
+  const isNewMonth = i === 0 || w.getMonth() !== weeks[i-1].getMonth();
+  th.style.cssText = `text-align:center;font-size:10px;font-weight:600;color:#555;padding:2px 0 1px;border-left:${isNewMonth ? '1px solid #bbb' : '0.5px solid #ddd'};`;
+  th.textContent = 'W' + getISOWeek(w);
+  weekRow.appendChild(th);
+});
+thead.appendChild(weekRow);
+
+// Date range row
+const dateRow = document.createElement('tr');
+const dEmpty = document.createElement('th'); dEmpty.className = 'name-col'; dateRow.appendChild(dEmpty);
+weeks.forEach((w, i) => {
+  const sun = new Date(w); sun.setDate(w.getDate() + 6);
+  const isNewMonth = i === 0 || w.getMonth() !== weeks[i-1].getMonth();
+  const th = document.createElement('th');
+  th.style.cssText = `text-align:center;font-size:9px;font-weight:400;color:#888;padding:0 1px 5px;border-left:${isNewMonth ? '1px solid #bbb' : '0.5px solid #ddd'};white-space:nowrap;overflow:hidden;border-bottom:1px solid #ccc;`;
+  th.textContent = w.getDate()+'/'+(w.getMonth()+1)+'–'+sun.getDate()+'/'+(sun.getMonth()+1);
+  dateRow.appendChild(th);
+});
+thead.appendChild(dateRow);
+table.appendChild(thead);
+
+// Body
+const tbody = document.createElement('tbody');
+const ROW_H = 34;
+const weekW = 100 / weeks.length;
+
+people.forEach((person, pi) => {
+  const tr = document.createElement('tr');
+  tr.className = pi % 2 === 0 ? 'row-even' : 'row-odd';
+  tr.style.height = ROW_H + 'px';
+
+  const nameTd = document.createElement('td');
+  nameTd.style.cssText = 'padding:4px 10px 4px 4px;font-size:12px;color:#222;white-space:nowrap;vertical-align:middle;border-bottom:0.5px solid #eee;';
+  nameTd.textContent = person.name;
+  tr.appendChild(nameTd);
+
+  const barTd = document.createElement('td');
+  barTd.colSpan = weeks.length;
+  barTd.style.cssText = `position:relative;height:${ROW_H}px;padding:0;border-bottom:0.5px solid #eee;`;
+
+  weeks.forEach((w, i) => {
+    const isNewMonth = i === 0 || w.getMonth() !== weeks[i-1].getMonth();
+    const div = document.createElement('div');
+    div.style.cssText = `position:absolute;top:0;bottom:0;left:${i*weekW}%;width:${weekW}%;border-left:${isNewMonth ? '1px solid #bbb' : '0.5px solid #ddd'};`;
+    barTd.appendChild(div);
+  });
+
+  person.periods.forEach(p => {
+    const s = new Date(p.start);
+    const e = new Date(p.end);
+    const left  = (daysBetween(chartStart, s) / totalDays) * 100;
+    const width = ((daysBetween(s, e) + 1) / totalDays) * 100;
+    const color = colors[pi % colors.length];
+
+    const bar = document.createElement('div');
+    bar.style.cssText = `position:absolute;top:7px;height:20px;border-radius:4px;left:${left}%;width:${width}%;background:${color};display:flex;align-items:center;overflow:hidden;`;
+    bar.title = fmt(s) + ' – ' + fmt(e);
+
+    const label = document.createElement('span');
+    label.textContent = fmt(s) + ' – ' + fmt(e);
+    label.style.cssText = 'font-size:9px;font-weight:600;color:#fff;white-space:nowrap;padding:0 6px;overflow:hidden;text-overflow:ellipsis;';
+    bar.appendChild(label);
+    barTd.appendChild(bar);
+  });
+
+  tr.appendChild(barTd);
+  tbody.appendChild(tr);
+});
+
+table.appendChild(tbody);
+gantt.appendChild(table);
+
+// Legend
+const legend = document.createElement('div');
+legend.style.cssText = 'margin-top:16px;display:flex;flex-wrap:wrap;gap:10px 18px;';
+people.filter(p => p.periods.length > 0).forEach(p => {
+  const pi = people.indexOf(p);
+  const item = document.createElement('span');
+  item.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:11px;color:#555;';
+  item.innerHTML = `<span style="width:10px;height:10px;border-radius:2px;background:${colors[pi]};display:inline-block;"></span>${p.name}`;
+  legend.appendChild(item);
+});
+gantt.appendChild(legend);
+</script>
+</body>
+</html>
