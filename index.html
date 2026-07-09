@@ -8,13 +8,18 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; padding: 24px; background: #fff; color: #222; }
   h1 { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #333; }
-  .range-buttons { display: flex; gap: 8px; margin-bottom: 16px; }
+  .range-buttons { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
   .range-btn {
     font-family: inherit; font-size: 12px; padding: 6px 12px; border-radius: 5px;
     border: 1px solid #ccc; background: #f5f5f5; color: #333; cursor: pointer;
   }
   .range-btn:hover { background: #e8e8e8; }
   .range-btn.active { background: #4A8FDD; color: #fff; border-color: #4A8FDD; }
+  .mail-btn {
+    font-family: inherit; font-size: 12px; padding: 6px 12px; border-radius: 5px;
+    border: 1px solid #ccc; background: #f5f5f5; color: #333; cursor: pointer; margin-left: auto;
+  }
+  .mail-btn:hover { background: #e8e8e8; }
   .gantt { width: 100%; overflow-x: auto; }
   table { border-collapse: collapse; width: 100%; table-layout: fixed; }
   th, td { font-size: 11px; }
@@ -34,7 +39,7 @@
 <div class="gantt" id="gantt"></div>
 <script>
 const people = [
-  { name: 'Greet',      periods: [{ start: '2026-05-29', end: '2026-06-06' }] },
+  { name: 'Greet',      periods: [{ start: '2026-05-29', end: '2026-06-06' }, { start: '2026-08-03', end: '2026-08-21' }] },
   { name: 'Denise',     periods: [{ start: '2026-06-15', end: '2026-06-19' }, { start: '2026-07-13', end: '2026-07-27' }] },
   { name: 'Marieke',    periods: [{ start: '2026-06-26', end: '2026-07-11' }] },
   { name: 'Michelle',   periods: [{ start: '2026-07-20', end: '2026-08-23' }] },
@@ -215,6 +220,20 @@ ranges.forEach(r => {
   btn.addEventListener('click', () => setActiveRange(r.key));
   rangeButtonsEl.appendChild(btn);
 });
+
+const mailBtn = document.createElement('button');
+mailBtn.className = 'mail-btn';
+mailBtn.textContent = 'Mail vakantie';
+mailBtn.addEventListener('click', () => {
+  const sortedPeople = [...people].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
+  const lines = sortedPeople
+    .filter(p => p.periods.length > 0)
+    .map(p => `${p.name}: ${p.periods.map(pd => fmt(new Date(pd.start)) + ' – ' + fmt(new Date(pd.end))).join(', ')}`);
+  const subject = encodeURIComponent('Vakantieoverzicht team 2026');
+  const body = encodeURIComponent(lines.join('\n'));
+  window.location.href = `mailto:bork.anneloes@gmail.com?subject=${subject}&body=${body}`;
+});
+rangeButtonsEl.appendChild(mailBtn);
 
 setActiveRange('2m');
 </script>
