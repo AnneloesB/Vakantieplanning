@@ -231,7 +231,7 @@ mailBtn.addEventListener('click', () => {
     .map(p => `${p.name}: ${p.periods.map(pd => fmt(new Date(pd.start)) + ' – ' + fmt(new Date(pd.end))).join(', ')}`);
   const subject = encodeURIComponent('Vakantieoverzicht team 2026');
   const body = encodeURIComponent(lines.join('\n'));
-  window.location.href = `mailto:bork.anneloes@gmail.com?subject=${subject}&body=${body}`;
+  window.location.href = `mailto:anneloes.bork@tpz-midden.nl?subject=${subject}&body=${body}`;
 });
 rangeButtonsEl.appendChild(mailBtn);
 
