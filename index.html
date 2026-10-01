@@ -42,7 +42,7 @@ const people = [
   { name: 'Greet',      periods: [{ start: '2026-05-29', end: '2026-06-06' }, { start: '2026-08-03', end: '2026-08-21' }] },
   { name: 'Denise',     periods: [{ start: '2026-06-15', end: '2026-06-19' }, { start: '2026-07-13', end: '2026-07-27' }] },
   { name: 'Marieke',    periods: [{ start: '2026-06-26', end: '2026-07-11' }] },
-  { name: 'Michelle',   periods: [{ start: '2026-07-20', end: '2026-08-23' }] },
+  { name: 'Michelle',   periods: [{ start: '2026-07-20', end: '2026-08-23' }, { start: '2026-11-02', end: '2026-11-08', tentative: true }] },
   { name: 'Annemarije', periods: [{ start: '2026-07-27', end: '2026-08-25' }, { start: '2026-09-21', end: '2026-09-25' }, { start: '2026-10-19', end: '2026-10-23' }] },
   { name: 'Kirsten',    periods: [{ start: '2026-07-07', end: '2026-07-31', color: '#999999' }, { start: '2026-07-31', end: '2026-08-28' }] },
   { name: 'Lonneke',    periods: [{ start: '2026-08-03', end: '2026-08-19' }, { start: '2026-10-22', end: '2026-10-27' }] },
@@ -51,7 +51,7 @@ const people = [
   { name: 'Willemijn',  periods: [{ start: '2026-10-15', end: '2026-10-25' }] },
   { name: 'Siep',       periods: [{ start: '2026-10-10', end: '2026-10-18' }] },
   { name: 'Marco',      periods: [] },
-  { name: 'Anouk',      periods: [] },
+  { name: 'Anouk',      periods: [{ start: '2026-10-26', end: '2026-11-12' }] },
 ];
 
 const colors = ['#4A8FDD','#1D9E75','#D85A30','#7F77DD','#BA7517','#993556','#639922','#0F6E56','#888780','#2E7D8C','#B8497A','#5C7A29','#A15C2E'];
@@ -179,13 +179,21 @@ function renderGantt(rangeStart, rangeEnd) {
       const width = Math.min(100 - left, ((daysBetween(clampedStart, clampedEnd) + 1) / totalDays) * 100);
       const color = p.color || colors[people.indexOf(person) % colors.length];
 
+      // Onder voorbehoud: gestreept in eigen kleur en wit
+      const background = p.tentative
+        ? `repeating-linear-gradient(45deg, ${color} 0 5px, #fff 5px 10px)`
+        : color;
+      const border = p.tentative ? `border:1.5px solid ${color};` : '';
+
       const bar = document.createElement('div');
-      bar.style.cssText = `position:absolute;top:7px;height:20px;border-radius:4px;left:${left}%;width:${width}%;background:${color};display:flex;align-items:center;overflow:hidden;`;
-      bar.title = fmt(s) + ' – ' + fmt(e);
+      bar.style.cssText = `position:absolute;top:7px;height:20px;border-radius:4px;left:${left}%;width:${width}%;background:${background};${border}display:flex;align-items:center;overflow:hidden;`;
+      bar.title = fmt(s) + ' – ' + fmt(e) + (p.tentative ? ' (onder voorbehoud)' : '');
 
       const label = document.createElement('span');
       label.textContent = fmt(s) + ' – ' + fmt(e);
-      label.style.cssText = 'font-size:9px;font-weight:600;color:#fff;white-space:nowrap;padding:0 6px;overflow:hidden;text-overflow:ellipsis;';
+      label.style.cssText = p.tentative
+        ? `font-size:9px;font-weight:600;color:${color};background:#fff;border-radius:3px;white-space:nowrap;padding:0 4px;margin:0 3px;overflow:hidden;text-overflow:ellipsis;`
+        : 'font-size:9px;font-weight:600;color:#fff;white-space:nowrap;padding:0 6px;overflow:hidden;text-overflow:ellipsis;';
       bar.appendChild(label);
       barTd.appendChild(bar);
     });
@@ -207,6 +215,12 @@ function renderGantt(rangeStart, rangeEnd) {
     item.innerHTML = `<span style="width:10px;height:10px;border-radius:2px;background:${colors[pi % colors.length]};display:inline-block;"></span>${p.name}`;
     legend.appendChild(item);
   });
+  if (people.some(p => p.periods.some(pd => pd.tentative))) {
+    const item = document.createElement('span');
+    item.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:11px;color:#555;margin-left:8px;';
+    item.innerHTML = `<span style="width:16px;height:10px;border-radius:2px;border:1px solid #888;background:repeating-linear-gradient(45deg,#888 0 3px,#fff 3px 6px);display:inline-block;"></span>Onder voorbehoud`;
+    legend.appendChild(item);
+  }
   gantt.appendChild(legend);
 }
 
@@ -240,7 +254,7 @@ mailBtn.addEventListener('click', () => {
   const sortedPeople = [...people].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
   const lines = sortedPeople
     .filter(p => p.periods.length > 0)
-    .map(p => `${p.name}: ${p.periods.map(pd => fmt(parseDate(pd.start)) + ' – ' + fmt(parseDate(pd.end))).join(', ')}`);
+    .map(p => `${p.name}: ${p.periods.map(pd => fmt(parseDate(pd.start)) + ' – ' + fmt(parseDate(pd.end)) + (pd.tentative ? ' (onder voorbehoud)' : '')).join(', ')}`);
   const subject = encodeURIComponent('Vakantieoverzicht team 2026');
   const body = encodeURIComponent(lines.join('\n'));
   window.location.href = `mailto:anneloes.bork@tpz-midden.nl?subject=${subject}&body=${body}`;
