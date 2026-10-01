@@ -66,23 +66,35 @@ function getISOWeek(d) {
 function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
 function fmt(d) { return d.getDate() + ' ' + d.toLocaleString('nl-NL', { month: 'short' }); }
 function addMonths(d, n) { const r = new Date(d); r.setMonth(r.getMonth() + n); return r; }
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+function parseDate(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+// Maandag (lokale middernacht) van de week waarin d valt
+function startOfWeek(d) { const r = new Date(d.getFullYear(), d.getMonth(), d.getDate()); return addDays(r, -((r.getDay() + 6) % 7)); }
+// Een week hoort bij de maand van zijn donderdag (ISO-conventie)
+function weekMonth(w) { return addDays(w, 3).getMonth(); }
 
-function renderGantt(chartStart, chartEnd) {
+function renderGantt(rangeStart, rangeEnd) {
   const gantt = document.getElementById('gantt');
   gantt.innerHTML = '';
+
+  // Hele ISO-weken tonen: van maandag t/m zondag; chartEnd is exclusief
+  const chartStart = startOfWeek(rangeStart);
+  const chartEnd = addDays(startOfWeek(rangeEnd), 7);
+  const lastDay = addDays(chartEnd, -1);
 
   const totalDays = daysBetween(chartStart, chartEnd);
   const sortedPeople = [...people].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
 
   const weeks = [];
   let cur = new Date(chartStart);
-  while (cur < chartEnd) { weeks.push(new Date(cur)); cur.setDate(cur.getDate() + 7); }
+  while (cur < chartEnd) { weeks.push(new Date(cur)); cur = addDays(cur, 7); }
 
   const monthGroups = [];
   weeks.forEach((w) => {
-    const mKey = w.getFullYear() + '-' + w.getMonth();
+    const thu = addDays(w, 3);
+    const mKey = thu.getFullYear() + '-' + thu.getMonth();
     if (!monthGroups.length || monthGroups[monthGroups.length-1].key !== mKey)
-      monthGroups.push({ key: mKey, label: w.toLocaleString('nl-NL', { month: 'long' }), count: 0 });
+      monthGroups.push({ key: mKey, label: thu.toLocaleString('nl-NL', { month: 'long' }), count: 0 });
     monthGroups[monthGroups.length-1].count++;
   });
 
@@ -107,7 +119,7 @@ function renderGantt(chartStart, chartEnd) {
   const wEmpty = document.createElement('th'); wEmpty.className = 'name-col'; weekRow.appendChild(wEmpty);
   weeks.forEach((w, i) => {
     const th = document.createElement('th');
-    const isNewMonth = i === 0 || w.getMonth() !== weeks[i-1].getMonth();
+    const isNewMonth = i === 0 || weekMonth(w) !== weekMonth(weeks[i-1]);
     th.style.cssText = `text-align:center;font-size:10px;font-weight:600;color:#555;padding:2px 0 1px;border-left:${isNewMonth ? '1px solid #bbb' : '0.5px solid #ddd'};`;
     th.textContent = 'W' + getISOWeek(w);
     weekRow.appendChild(th);
@@ -118,8 +130,8 @@ function renderGantt(chartStart, chartEnd) {
   const dateRow = document.createElement('tr');
   const dEmpty = document.createElement('th'); dEmpty.className = 'name-col'; dateRow.appendChild(dEmpty);
   weeks.forEach((w, i) => {
-    const sun = new Date(w); sun.setDate(w.getDate() + 6);
-    const isNewMonth = i === 0 || w.getMonth() !== weeks[i-1].getMonth();
+    const sun = addDays(w, 6);
+    const isNewMonth = i === 0 || weekMonth(w) !== weekMonth(weeks[i-1]);
     const th = document.createElement('th');
     th.style.cssText = `text-align:center;font-size:9px;font-weight:400;color:#888;padding:0 1px 5px;border-left:${isNewMonth ? '1px solid #bbb' : '0.5px solid #ddd'};white-space:nowrap;overflow:hidden;border-bottom:1px solid #ccc;`;
     th.textContent = w.getDate()+'/'+(w.getMonth()+1)+'–'+sun.getDate()+'/'+(sun.getMonth()+1);
@@ -151,18 +163,18 @@ function renderGantt(chartStart, chartEnd) {
     barTd.style.cssText = `position:relative;height:${ROW_H}px;padding:0;border-bottom:0.5px solid #eee;`;
 
     weeks.forEach((w, i) => {
-      const isNewMonth = i === 0 || w.getMonth() !== weeks[i-1].getMonth();
+      const isNewMonth = i === 0 || weekMonth(w) !== weekMonth(weeks[i-1]);
       const div = document.createElement('div');
       div.style.cssText = `position:absolute;top:0;bottom:0;left:${i*weekW}%;width:${weekW}%;border-left:${isNewMonth ? '1px solid #bbb' : '0.5px solid #ddd'};`;
       barTd.appendChild(div);
     });
 
     person.periods.forEach(p => {
-      const s = new Date(p.start);
-      const e = new Date(p.end);
-      if (e < chartStart || s > chartEnd) return;
+      const s = parseDate(p.start);
+      const e = parseDate(p.end);
+      if (e < chartStart || s > lastDay) return;
       const clampedStart = s < chartStart ? chartStart : s;
-      const clampedEnd = e > chartEnd ? chartEnd : e;
+      const clampedEnd = e > lastDay ? lastDay : e;
       const left  = Math.max(0, (daysBetween(chartStart, clampedStart) / totalDays) * 100);
       const width = Math.min(100 - left, ((daysBetween(clampedStart, clampedEnd) + 1) / totalDays) * 100);
       const color = p.color || colors[people.indexOf(person) % colors.length];
@@ -201,8 +213,8 @@ function renderGantt(chartStart, chartEnd) {
 const ranges = [
   { key: '2m', label: 'Komende 2 maanden', getRange: () => { const t = new Date(); return [t, addMonths(t, 2)]; } },
   { key: '3m', label: 'Komend kwartaal',   getRange: () => { const t = new Date(); return [t, addMonths(t, 3)]; } },
-  { key: 'rest', label: 'Rest van het jaar', getRange: () => [new Date(), new Date('2026-12-31')] },
-  { key: 'year', label: 'Heel jaar',       getRange: () => [new Date('2026-01-01'), new Date('2026-12-31')] },
+  { key: 'rest', label: 'Rest van het jaar', getRange: () => [new Date(), parseDate('2026-12-31')] },
+  { key: 'year', label: 'Heel jaar',       getRange: () => [parseDate('2026-01-01'), parseDate('2026-12-31')] },
 ];
 
 const rangeButtonsEl = document.getElementById('rangeButtons');
@@ -228,7 +240,7 @@ mailBtn.addEventListener('click', () => {
   const sortedPeople = [...people].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
   const lines = sortedPeople
     .filter(p => p.periods.length > 0)
-    .map(p => `${p.name}: ${p.periods.map(pd => fmt(new Date(pd.start)) + ' – ' + fmt(new Date(pd.end))).join(', ')}`);
+    .map(p => `${p.name}: ${p.periods.map(pd => fmt(parseDate(pd.start)) + ' – ' + fmt(parseDate(pd.end))).join(', ')}`);
   const subject = encodeURIComponent('Vakantieoverzicht team 2026');
   const body = encodeURIComponent(lines.join('\n'));
   window.location.href = `mailto:anneloes.bork@tpz-midden.nl?subject=${subject}&body=${body}`;
