@@ -8,7 +8,7 @@ const people = [
   { name: 'Kirsten',    periods: [{ start: '2026-07-07', end: '2026-07-31', color: '#999999' }, { start: '2026-07-31', end: '2026-08-28' }] },
   { name: 'Lonneke',    periods: [{ start: '2026-08-03', end: '2026-08-19' }, { start: '2026-10-22', end: '2026-10-27' }] },
   { name: 'Anneloes',   periods: [{ start: '2026-08-24', end: '2026-09-07' }, { start: '2026-11-26', end: '2026-11-30', note: '26 nov vanaf 12:00' }, { start: '2026-12-23', end: '2026-12-31' }] },
-  { name: 'Mirjam',     periods: [{ start: '2026-10-17', end: '2026-10-24' }] },
+  { name: 'Mirjam',     periods: [{ start: '2026-10-17', end: '2026-10-24' }, { start: '2026-12-21', end: '2027-01-04' }, { start: '2027-02-19', end: '2027-02-28' }] },
   { name: 'Willemijn',  periods: [{ start: '2026-10-15', end: '2026-10-25' }, { start: '2026-12-21', end: '2026-12-27' }] },
   { name: 'Siep',       periods: [{ start: '2026-10-10', end: '2026-10-18' }] },
   { name: 'Marco',      periods: [] },
