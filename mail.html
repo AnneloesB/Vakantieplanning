@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mail vakantie</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 32px 16px; background: #fff; color: #222; text-align: center; }
+  p { font-size: 15px; margin-bottom: 20px; color: #444; }
+  a.btn { display: inline-block; font-size: 16px; padding: 12px 20px; border-radius: 6px; background: #4A8FDD; color: #fff; text-decoration: none; }
+  a.back { display: block; margin-top: 24px; font-size: 13px; color: #4A8FDD; }
+</style>
+</head>
+<body>
+<p>Je mailapp wordt geopend&hellip;<br>Gebeurt er niets? Tik dan op de knop.</p>
+<a class="btn" id="mailLink" href="#">Mail vakantie</a>
+<a class="back" href="./">Naar de vakantieplanning</a>
+<script src="data.js"></script>
+<script>
+  const link = buildMailLink();
+  document.getElementById('mailLink').href = link;
+  window.location.href = link;
+</script>
+<script data-goatcounter="https://anneloes.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
