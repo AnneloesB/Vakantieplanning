@@ -1,6 +1,6 @@
 // Vakantiegegevens team — gedeeld door index.html en mail.html
 const people = [
-  { name: 'Greet',      periods: [{ start: '2026-05-29', end: '2026-06-06' }, { start: '2026-08-03', end: '2026-08-21' }] },
+  { name: 'Greet',      periods: [{ start: '2026-05-29', end: '2026-06-06' }, { start: '2026-08-03', end: '2026-08-21' }, { start: '2026-12-22', end: '2027-01-04' }] },
   { name: 'Denise',     periods: [{ start: '2026-06-15', end: '2026-06-19' }, { start: '2026-07-13', end: '2026-07-27' }] },
   { name: 'Marieke',    periods: [{ start: '2026-06-26', end: '2026-07-11' }] },
   { name: 'Michelle',   periods: [{ start: '2026-07-20', end: '2026-08-23' }, { start: '2026-11-02', end: '2026-11-08' }] },
@@ -15,7 +15,11 @@ const people = [
   { name: 'Anouk',      periods: [{ start: '2026-10-26', end: '2026-11-12' }] },
 ];
 
-function fmt(d) { return d.getDate() + ' ' + d.toLocaleString('nl-NL', { month: 'short' }); }
+// Jaartal alleen tonen als de datum niet in het huidige jaar valt
+function fmt(d) {
+  const s = d.getDate() + ' ' + d.toLocaleString('nl-NL', { month: 'short' });
+  return d.getFullYear() === new Date().getFullYear() ? s : s + ' ' + d.getFullYear();
+}
 function parseDate(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
 
 // mailto-link met het vakantieoverzicht (gebruikt door de knop "Mail vakantie" en door mail.html)
@@ -24,7 +28,7 @@ function buildMailLink() {
   const lines = sortedPeople
     .filter(p => p.periods.length > 0)
     .map(p => `${p.name}: ${p.periods.map(pd => (pd.start === pd.end ? fmt(parseDate(pd.start)) : fmt(parseDate(pd.start)) + ' – ' + fmt(parseDate(pd.end))) + (pd.note ? ' (' + pd.note + ')' : '') + (pd.tentative ? ' (onder voorbehoud)' : '')).join(', ')}`);
-  const subject = encodeURIComponent('Vakantieoverzicht team 2026');
+  const subject = encodeURIComponent('Vakantieoverzicht team');
   const body = encodeURIComponent(lines.join('\n'));
   return `mailto:anneloes.bork@tpz-midden.nl?subject=${subject}&body=${body}`;
 }

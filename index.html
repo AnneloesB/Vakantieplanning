@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vakantie Gantt 2026</title>
+<title>Vakantie Gantt</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; padding: 24px; background: #fff; color: #222; }
@@ -34,7 +34,7 @@
 </style>
 </head>
 <body>
-<h1>Vakantieoverzicht team 2026</h1>
+<h1>Vakantieoverzicht team</h1>
 <div class="range-buttons" id="rangeButtons"></div>
 <div class="gantt" id="gantt"></div>
 <script src="data.js"></script>
@@ -211,11 +211,16 @@ function renderGantt(rangeStart, rangeEnd) {
   gantt.appendChild(legend);
 }
 
+// Jaarknoppen: het huidige jaar plus elk later jaar waarin vakantie gepland staat
+const thisYear = new Date().getFullYear();
+const dataYears = people.flatMap(p => p.periods.flatMap(pd => [parseDate(pd.start).getFullYear(), parseDate(pd.end).getFullYear()]));
+const years = [...new Set([thisYear, ...dataYears])].filter(y => y >= thisYear).sort();
+
 const ranges = [
   { key: '2m', label: 'Komende 2 maanden', getRange: () => { const t = new Date(); return [t, addMonths(t, 2)]; } },
   { key: '3m', label: 'Komend kwartaal',   getRange: () => { const t = new Date(); return [t, addMonths(t, 3)]; } },
-  { key: 'rest', label: 'Rest van het jaar', getRange: () => [new Date(), parseDate('2026-12-31')] },
-  { key: 'year', label: 'Heel jaar',       getRange: () => [parseDate('2026-01-01'), parseDate('2026-12-31')] },
+  { key: 'rest', label: 'Rest van het jaar', getRange: () => [new Date(), new Date(thisYear, 11, 31)] },
+  ...years.map(y => ({ key: 'y' + y, label: 'Heel ' + y, getRange: () => [new Date(y, 0, 1), new Date(y, 11, 31)] })),
 ];
 
 const rangeButtonsEl = document.getElementById('rangeButtons');
