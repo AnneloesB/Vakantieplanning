@@ -46,7 +46,7 @@ const people = [
   { name: 'Annemarije', periods: [{ start: '2026-07-27', end: '2026-08-25' }, { start: '2026-09-21', end: '2026-09-25' }, { start: '2026-10-19', end: '2026-10-23' }] },
   { name: 'Kirsten',    periods: [{ start: '2026-07-07', end: '2026-07-31', color: '#999999' }, { start: '2026-07-31', end: '2026-08-28' }] },
   { name: 'Lonneke',    periods: [{ start: '2026-08-03', end: '2026-08-19' }, { start: '2026-10-22', end: '2026-10-27' }] },
-  { name: 'Anneloes',   periods: [{ start: '2026-08-24', end: '2026-09-07' }] },
+  { name: 'Anneloes',   periods: [{ start: '2026-08-24', end: '2026-09-07' }, { start: '2026-11-26', end: '2026-11-26', note: 'vanaf 12:00' }, { start: '2026-11-30', end: '2026-11-30' }, { start: '2026-12-23', end: '2026-12-31' }] },
   { name: 'Mirjam',     periods: [{ start: '2026-10-17', end: '2026-10-24' }] },
   { name: 'Willemijn',  periods: [{ start: '2026-10-15', end: '2026-10-25' }] },
   { name: 'Siep',       periods: [{ start: '2026-10-10', end: '2026-10-18' }] },
@@ -187,10 +187,12 @@ function renderGantt(rangeStart, rangeEnd) {
 
       const bar = document.createElement('div');
       bar.style.cssText = `position:absolute;top:7px;height:20px;border-radius:4px;left:${left}%;width:${width}%;background:${background};${border}display:flex;align-items:center;overflow:hidden;`;
-      bar.title = fmt(s) + ' – ' + fmt(e) + (p.tentative ? ' (onder voorbehoud)' : '');
+      const range = p.start === p.end ? fmt(s) : fmt(s) + ' – ' + fmt(e);
+      const note = p.note ? ' (' + p.note + ')' : '';
+      bar.title = range + note + (p.tentative ? ' (onder voorbehoud)' : '');
 
       const label = document.createElement('span');
-      label.textContent = fmt(s) + ' – ' + fmt(e);
+      label.textContent = range + note;
       label.style.cssText = p.tentative
         ? `font-size:9px;font-weight:600;color:${color};background:#fff;border-radius:3px;white-space:nowrap;padding:0 4px;margin:0 3px;overflow:hidden;text-overflow:ellipsis;`
         : 'font-size:9px;font-weight:600;color:#fff;white-space:nowrap;padding:0 6px;overflow:hidden;text-overflow:ellipsis;';
@@ -254,7 +256,7 @@ mailBtn.addEventListener('click', () => {
   const sortedPeople = [...people].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
   const lines = sortedPeople
     .filter(p => p.periods.length > 0)
-    .map(p => `${p.name}: ${p.periods.map(pd => fmt(parseDate(pd.start)) + ' – ' + fmt(parseDate(pd.end)) + (pd.tentative ? ' (onder voorbehoud)' : '')).join(', ')}`);
+    .map(p => `${p.name}: ${p.periods.map(pd => (pd.start === pd.end ? fmt(parseDate(pd.start)) : fmt(parseDate(pd.start)) + ' – ' + fmt(parseDate(pd.end))) + (pd.note ? ' (' + pd.note + ')' : '') + (pd.tentative ? ' (onder voorbehoud)' : '')).join(', ')}`);
   const subject = encodeURIComponent('Vakantieoverzicht team 2026');
   const body = encodeURIComponent(lines.join('\n'));
   window.location.href = `mailto:anneloes.bork@tpz-midden.nl?subject=${subject}&body=${body}`;
